@@ -4,7 +4,11 @@ Implementation of the Ensemble Kalman Square Root Filter using BLAS. The algorit
 
 ## Installation
 
+Installation is not fully automatic yet, and no dependency checks are done
+
 ### python api 
+
+Make sure to have a working python + numpy distribution. Also, make sure that a BLAS library is installed, and that the path to the library is known to your linker (LD_LIBRARY_PATH). Of course, a suitable compiler suite is needed as well. 
 
 clone the repository and cd into the main directory
 Build with
