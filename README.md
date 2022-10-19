@@ -33,8 +33,11 @@ A small python example is given in examples, which can also be used as a test.
 cd examples
 python example.py
 ```
+
 It will fit some synthetic data to the following function $y(t)$
-$$ y = a \cos(t) + bt + c\sin(t) $$
+
+$$ y = a\cos(t) + bt + c\sin(t) $$
+
 where $a$,$b$, and $c$ are to be determined 
 produce the following figure
 ![Ensemble Kalman Square Root Filter example: ](examples/test.png)
@@ -51,7 +54,7 @@ pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_pr
 
 	Parameters:  
 	     obs : ndarray, dtype=float, (N,)
-i		   the observations of 
+	 	   the observations of 
 
     	     may_reject : ndarray, dtype=boolean, (N,)
 	     		  observations that may be rejected dim N
@@ -71,7 +74,7 @@ i		   the observations of
 		 observation error
 
 	     HPHR : ndarray, dtype=float, (N,) 
-im N
+
 	     x : ndarray, dtype=float, (K,) 
 	'''
 ```
