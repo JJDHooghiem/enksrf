@@ -1,6 +1,6 @@
 # Ensemble Kalman Square Root Filter
 
-Implementation of the Ensemble Kalman Square Root Filter using BLAS. The algorithm is after [Whitaker and Hamill (2002)](https://journals.ametsoc.org/view/journals/mwre/130/7/1520-0493_2002_130_1913_edawpo_2.0.co_2.xml) and [Peters et al. (2005)](https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/2005JD006157). That said, the package is experimental.
+Implementation of the Ensemble Kalman Square Root Filter using BLAS. The algorithm is after [Whitaker and Hamill (2002)](https://journals.ametsoc.org/view/journals/mwre/130/7/1520-0493_2002_130_1913_edawpo_2.0.co_2.xml) and [Peters et al. (2005)](https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/2005JD006157). Currently this package is experimental.
 
 ## Installation
 
@@ -15,7 +15,7 @@ or use
 ``` 
 python setup.py build
 ```
-in the latter case, make sure that the resulting shared object file is located in your python path.
+in the latter case, make sure that the resulting shared object file is located on your python path.
 
 #### Deprecation of distutils
 
