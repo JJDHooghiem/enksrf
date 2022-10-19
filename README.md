@@ -34,9 +34,10 @@ cd examples
 python example.py
 ```
 It will fit some synthetic data to the following function $y(t)$
+
 $$ y = a \cos(t) + bt + c\sin(t) $$
-where $a$,$b$, and $c$ are to be determined 
-produce the following figure
+
+where $a$, $b$, and $c$ are to be determined. this produces the following figure
 ![Ensemble Kalman Square Root Filter example: ](examples/test.png)
 
 Import the package
