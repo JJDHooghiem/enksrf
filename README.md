@@ -6,12 +6,14 @@ Implementation of the Ensemble Kalman Square Root Filter using BLAS. The algorit
 
 ### python api 
 
-clone the repository and cd into the main directory
+Clone the repository and cd into the main directory. 
 Build with
 ```sh
 pip install . 
 ```
-or use
+Sometimes the blas library has a different name then te one specified in the `setup.py`. If needed, change the name corresponding to the blas library you want to link to. Using pip will install this as a site-package.
+ 
+The following will result in the same build, but won't install it as an importable python site-package. 
 ``` 
 python setup.py build
 ```
