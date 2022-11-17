@@ -4,14 +4,16 @@ Implementation of the Ensemble Kalman Square Root Filter using BLAS. The algorit
 
 ## Installation
 
+Installation is not fully automatic yet, and no dependency checks are done
+
 ### python api 
 
-Clone the repository and cd into the main directory. 
-Build with
+Clone the repository and cd into the main directory. Make sure to have a working python + numpy distribution. Also, make sure that a BLAS library is installed, and that the path to the library is known to your linker (LD_LIBRARY_PATH). Of course, a suitable compiler suite is needed as well. Sometimes the blas library has a different name then te one specified in the `setup.py`. If needed, change the name corresponding to the blas library you want to link to. Using pip will install this as a site-package.
+
+clone the repository and cd into the main directory. Build with
 ```sh
 pip install . 
 ```
-Sometimes the blas library has a different name then te one specified in the `setup.py`. If needed, change the name corresponding to the blas library you want to link to. Using pip will install this as a site-package.
  
 The following will result in the same build, but won't install it as an importable python site-package. 
 ``` 
@@ -41,6 +43,7 @@ It will fit some synthetic data to the following function $y(t)$
 $$ y = a\cos(t) + bt + c\sin(t) $$
 
 where $a$, $b$, and $c$ are to be determined. this produces the following figure
+
 ![Ensemble Kalman Square Root Filter example: ](examples/test.png)
 
 Import the package
