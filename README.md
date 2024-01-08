@@ -8,14 +8,14 @@ Installation is not fully automatic yet, and no dependency checks are done
 
 ### python api 
 
-Make sure to have a working python + numpy distribution. Also, make sure that a BLAS library is installed, and that the path to the library is known to your linker (LD_LIBRARY_PATH). Of course, a suitable compiler suite is needed as well. 
+Clone the repository and cd into the main directory. Make sure to have a working python + numpy distribution. Also, make sure that a BLAS library is installed, and that the path to the library is known to your linker (LD_LIBRARY_PATH). Of course, a suitable compiler suite is needed as well. Sometimes the blas library has a different name then te one specified in the `setup.py`. If needed, change the name corresponding to the blas library you want to link to. Using pip will install this as a site-package.
 
-clone the repository and cd into the main directory
-Build with
+clone the repository and cd into the main directory. Build with
 ```sh
 pip install . 
 ```
-or use
+ 
+The following will result in the same build, but won't install it as an importable python site-package. 
 ``` 
 python setup.py build
 ```
