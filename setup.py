@@ -3,7 +3,7 @@ from numpy.distutils.core import Extension
 pyenkf = Extension(name                   = 'pyenkf',
                    sources                = ['src/pyenkf/enksrf.F90'],
                    extra_f90_compile_args = ["-O3","-fdefault-real-8"],
-                   extra_link_args        = ["-lblas"],
+                   extra_link_args        = ["-lopenblas"],
                    )
 
 if __name__ == "__main__":
