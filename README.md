@@ -43,7 +43,7 @@ import pyenkf
 ```
 Call the filter, with arguments as specified below
 ```python
-pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_prime, R, HPHR, x, rejected)
+pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_prime, R, HPHR, x, rejected,assimilate)
 	'''
 	Fit K model parameters, refered to as the state x, of a linear model H to N observations using en ensemble kalman filter approach, with M members. The following input parameters are modified in place: Hx, rejected, x, HX_prime, X_prime, HPHR. Make sure that np.arrays are fortran contigious arrays, i.e. their order='F'. 
 
@@ -71,6 +71,9 @@ pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_pr
 	     HPHR : ndarray, dtype=float, (N,) 
 
 	     x : ndarray, dtype=float, (K,) 
+	
+    	     may_reject : ndarray, dtype=boolean, (N,)
+	     		  observations that may be assimilated dim N
 	'''
 ```
 It is important to specify arrays to be Fortran-contigious for N-dim arrays if N>1, so the memory layout is compatible with the Fortran routine used, this can be done as follows: 
