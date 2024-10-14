@@ -30,7 +30,7 @@ module enkf_core
 
 contains
 
-  subroutine enksrf(nobs,nmembers,nparams,obs,mrej,rej_thr,hx,hxp,xp,r, hphr,x,rejected)
+  subroutine enksrf(nobs,nmembers,nparams,obs,mrej,rej_thr,hx,hxp,xp,r, hphr,x,rejected,assimilate)
     !
     ! This subroutine implements the Ensemble Kalman Square Root Filter 
     ! algorithm as described in 
@@ -48,6 +48,7 @@ contains
                                                                   ! strucure (sometimes called particle number) 
     integer*8,intent(in)                              :: nparams  ! number of statevector elements to be estimated
     logical,dimension(nobs), intent(in)               :: mrej     ! may reject wether an observations may be rejected
+    logical,dimension(nobs), intent(in)               :: assimilate ! wether we want to assimilate this observation 
     real*8, dimension(nobs), intent(in)               :: obs      ! observation values
     real*8, dimension(nobs), intent(in)               :: R        ! observation error  
     real*8, dimension(nobs), intent(in)               :: rej_thr  ! rejection threshold for observation that may be rejected
@@ -78,6 +79,9 @@ contains
        
     ! start processing observations one at a time
     do i=1,nobs
+        if (assimilate(i).eqv..False.) then
+                cycle 
+        endif
         ! compute difference between forecast and observed:
         res           = obs(i) - Hx(i)
 
