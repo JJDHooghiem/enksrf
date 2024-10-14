@@ -1,0 +1,11 @@
+[build-system]
+build-backend = 'mesonpy'
+requires = ['meson-python','numpy']
+
+[project]
+name = 'pyenkf'
+version = '0.0.1'
+description = 'Wrapper ensemble kalman filter implementation in Fortran'
+readme = 'README.md'
+license = {file = 'LICENSE'}
+authors = [ {name = 'Joram J.D. Hooghiem', email = 'joramjd@gmail.com'} ]
