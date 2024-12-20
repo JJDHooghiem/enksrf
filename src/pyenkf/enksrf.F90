@@ -26,7 +26,7 @@ module enkf_core
 
   private 
 
-  public :: enksrf
+  public :: enksrf, dckcmm
 
 contains
 
@@ -143,4 +143,34 @@ contains
     enddo 
 
   end subroutine  enksrf
+  subroutine dckcmm(N,M,K,NM,A,B,C,R)
+         !
+         ! Computes the 
+         !       matmul( kron(A,B), C ) 
+         !       where A(N,N) and B(M,M) are cholesky decompositions
+         !       C is a matrix with dimension (NM,K)
+         !       and stores the result in R in R(NM,K)
+         !         
+         integer*8,intent(in) :: N, M, K, NM
+         real*8,dimension(N,N),intent(in) :: A
+         real*8,dimension(M,M),intent(in) :: B
+         real*8,dimension(NM,K),intent(in) :: C
+         real*8,dimension(NM,K),intent(inout) :: R 
+         integer*8            :: i,j,h,l,g
+         real*8 :: aa
+         do i=1,N
+          do j=1,i
+           do l=1,M
+            do g=1,K
+             aa=A(i,j)*C(l+(j-1)*M,g)
+             do h=l,M
+              R(h+(i-1)*M,g) =R(h+(i-1)*M,g)+  aa* B(h,l) 
+             enddo
+            enddo
+           enddo
+          enddo
+         enddo
+
+  end subroutine dckcmm
+
 end module enkf_core

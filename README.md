@@ -8,7 +8,7 @@ Installation is not fully automatic yet, and no dependency checks are done
 
 ### python api 
 
-Clone the repository and cd into the main directory. Make sure to have a working python + numpy distribution and that meson is installed. Also, make sure that a BLAS library is installed, and that the path to the library is known to your linker (LD_LIBRARY_PATH). Sometimes the blas library has a different name then te one specified in the meson.build. If needed, change the name corresponding to the blas library you want to link to. Using pip will install this as a site-package.
+Clone the repository and cd into the main directory. Make sure to have a working python + numpy distribution and that meson is installed. Also, make sure that a BLAS library is installed, and that the path to the library is known to your linker (LD_LIBRARY_PATH). Sometimes the blas library has a different name then te one specified in the meson.build; currently it will look for `blas` and `openblas`. If needed, change the name corresponding to the blas library you want to link to. Using pip will install this as a site-package.
 
 clone the repository and cd into the main directory. Build with
 ```sh
