@@ -82,7 +82,7 @@ for member in range(ensemblesize):
 # Call the filter by parsing the data
 # Note that above we defined 2 dimensional arrays as Fortran arrays which
 # affects their memory layout. Not doing so results in errors
-pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_prime, R, HPHR, x, rejected)
+pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_prime, R, HPHR, x, rejected,assimilate=np.array([True]*len(obs)))
 
 # create a figure that shows truth/observations/prior/posterior results
 # and an annotation with the rejected sample. 
