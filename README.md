@@ -72,7 +72,7 @@ pyenkf.enkf_core.enksrf(obs, may_reject, rejection_threshold, Hx, HX_prime, X_pr
 
 	     x : ndarray, dtype=float, (K,) 
 	
-    	     may_reject : ndarray, dtype=boolean, (N,)
+    	     assimilate : ndarray, dtype=boolean, (N,)
 	     		  observations that may be assimilated dim N
 	'''
 ```
@@ -85,3 +85,32 @@ some_zeros_int=np.zeros((10,10),order='F',dtype=int)
 print(some_variables.flags)
 print(some_zeros_int.flags)
 ```
+
+### Other routines
+
+#### dtrkmm 
+
+An implementation of a fused kronecker matrix matrix multiplication. It is used to compute an ensemble representing a covarince matrix $P$ that is decomposed into two matrices with kronecker factors so that $A_1 \otimes \A_2 = P$. Both these have a cholesky decomposition, which enter the subroutine. The algorithm avoids have to compute the full P and its cholesky decomposition, and has some weak optimization (cache blocking) targeting avx2 instructions (tested on AMD EPYC and AMD Ryzen 7). Performance on other machines is not guaranteed.
+
+```python
+pyenkf.enkf_core.dtrkmm(A1, A2, B, C)
+	'''
+	Computes the matmul(kron(A1,A2) , B) and stores the result in C. Assumes that A1 and A2 are lower triangular matrices.
+
+	Parameters:  
+	     A1 : ndarray, dtype=float, (N,N)
+	 	  lower triangular matrix 
+
+	     A2 : ndarray, dtype=float, (M,M)
+	 	  lower triangular matrix 
+
+	     B  : ndarray, dtype=float, (NxM,K)
+	 	  input matrix with dimensions NxM x K 
+
+	     C  : ndarray, dtype=float, (NxM,K)
+	 	  output matrix with dimensions NxM x K 
+
+	'''
+```
+
+See [this exmple](examples/kronmatmul.py)

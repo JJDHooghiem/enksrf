@@ -25,8 +25,16 @@ module enkf_core
   external :: dgemv,dger,daxpy
 
   private 
+  
+  ! enksrf is the ensemble square root filter
+  ! dtrkmm is a fused matmul( kron(A1,A2), B ) with A1 and A2 lower triangular matrices
 
-  public :: enksrf, dckcmm
+  public :: enksrf, dtrkmm
+
+  ! cache blocking parameters for kron(a1,a2) @ B
+  ! to use all ymm registers on avx2 machines
+  integer, parameter :: mr = 8
+  integer, parameter :: nr = 6
 
 contains
 
@@ -52,8 +60,7 @@ contains
     real*8, dimension(nobs), intent(in)               :: obs      ! observation values
     real*8, dimension(nobs), intent(in)               :: R        ! observation error  
     real*8, dimension(nobs), intent(in)               :: rej_thr  ! rejection threshold for observation that may be rejected
-
-    ! local variables
+! local variables
     integer*8                                         :: i,j       !
     real*8                                            :: n_fac     ! for the repeated factor of  1/(N-1), n=nmembers
     real*8                                            :: res,alpha ! residual, alpha factor (see Whitaker and Hamill 2002)
@@ -143,34 +150,164 @@ contains
     enddo 
 
   end subroutine  enksrf
-  subroutine dckcmm(N,M,K,NM,A,B,C,R)
-         !
-         ! Computes the 
-         !       matmul( kron(A,B), C ) 
-         !       where A(N,N) and B(M,M) are cholesky decompositions
-         !       C is a matrix with dimension (NM,K)
-         !       and stores the result in R in R(NM,K)
-         !         
-         integer*8,intent(in) :: N, M, K, NM
-         real*8,dimension(N,N),intent(in) :: A
-         real*8,dimension(M,M),intent(in) :: B
-         real*8,dimension(NM,K),intent(in) :: C
-         real*8,dimension(NM,K),intent(inout) :: R 
-         integer*8            :: i,j,h,l,g
-         real*8 :: aa
-         do i=1,N
-          do j=1,i
-           do l=1,M
-            do g=1,K
-             aa=A(i,j)*C(l+(j-1)*M,g)
-             do h=l,M
-              R(h+(i-1)*M,g) =R(h+(i-1)*M,g)+  aa* B(h,l) 
-             enddo
-            enddo
-           enddo
-          enddo
-         enddo
+  ! reference implementation that is much slower than the block version
+   subroutine dtrkmm_ref(N, M, K, NM, A1, A2, B, C)
+      !
+      ! Computes the
+      !       matmul( kron(A1,A2), B )
+      !       where A(N,N) and B(M,M) are cholesky decompositions
+      !       B is a matrix with dimension (NM,K)
+      !       and stores the result in C(NM,K)
+      !
+      integer*8, intent(in) :: N, M, K, NM
+      real*8, dimension(N, N), intent(in) :: A1
+      real*8, dimension(M, M), intent(in) :: A2
+      real*8, dimension(NM, K), intent(in) :: B
+      real*8, dimension(NM, K), intent(inout) :: C
+      integer*8            :: i, j, h, l, g
 
-  end subroutine dckcmm
+      do i = 1, N
+         do j = 1, i
+            do h = 1, M
+               do l = 1, h
+                  do g = 1, K
+                     C(h + (i - 1)*M, g) = C(h + (i - 1)*M, g) + A1(i, j)*A2(h, l)*B(l + (j - 1)*M, g)
+                  end do
+               end do
+            end do
+         end do
+      end do
 
+   end subroutine dtrkmm_ref
+
+   subroutine dtrkmm(N, M, K, NM, A1, A2, B, C)
+      !
+      ! Computes the
+      !       matmul( kron(A1,A2), B )
+      !       where A1(N,N) and A2(M,M) are cholesky decompositions
+      !       B is a matrix with dimension (NM,K)
+      !       and stores the result in C(NM,K)
+      !
+      integer, intent(in) :: N, M, K, NM
+      real*8, dimension(N, N), intent(in) :: A1
+      real*8, dimension(M, M), intent(in) :: A2
+      real*8, dimension(NM, K), intent(in) :: B
+      real*8, dimension(NM, K), intent(inout) :: C
+      integer            :: i, j, h, l, g, gg, hh, jnrmax, imrmax, imr, jnr, iblnr, jblnr
+      real*8 :: aa
+      real*8, dimension(mr, M*(M/mr + 1)) :: ablock
+      real*8, dimension(nr, M*(K/nr + 1)) :: bblock
+
+
+      !! repack A2 so that it can be accessed contiguously later on...
+      !! for large A2 we should consider implementing a blocking along M
+      !! or a pivoting scheme and reversing A2 and A1  
+      do h = 1, M, mr 
+         imrmax = min(mr, M - h + 1)
+         iblnr = h/mr
+         do l = 1, M
+            do imr = 1, imrmax
+               ablock(imr, l + iblnr*M) = A2(h - 1 + imr, l)
+            end do
+            do imr = imrmax + 1, mr
+               ablock(imr, l + iblnr*M) = 0.0
+            end do
+         end do
+      end do
+
+      do i = 1, N
+         do j = 1, i
+            ! skip A1 values that are 0 as it is 
+            ! factor for all that follows
+            if (A1(i, j) .eq. 0.0) cycle
+            ! pack a panel of B and transpose for contiguous access 
+
+            do g = 1, K, nr
+               jnrmax = min(nr, K - g + 1)
+               jblnr = g/nr
+               do l = 1, M
+                  do jnr = 1, jnrmax
+                     bblock(jnr, l + jblnr*M) = B(l + (j - 1)*M, jnr + g - 1)
+                  end do
+                  do jnr = jnrmax + 1, nr
+                     bblock(jnr, l + jblnr*M) = 0.0
+                  end do
+               end do
+            end do
+            ! original mloop
+            !do l=1,M ! this loop over M signals columns of A2 and rows of B and is effectively a
+
+            !$omp parallel do private(jnrmax,jblnr,g,h,imrmax,iblnr)
+            do g = 1, K, nr
+               jnrmax = min(nr, K - g + 1)
+               jblnr = g/nr
+               do h = 1, M, mr !needed to create ablocks
+                  imrmax = min(mr, M - h + 1)
+                  iblnr = h/mr
+                  ! within the kernel well loop over ablock(mr,M) values A2
+                  ! and bblock(nr,M)
+                  call mm_kernel_8x6(C((i - 1)*M + h:, g:), M,  &
+                  ablock(:, iblnr*M + 1:(iblnr + 1)*M - 1),     &
+                  bblock(:, jblnr*M + 1:(jblnr + 1)*M - 1),     & 
+                  imrmax, jnrmax, A1(i, j))
+                  ! reference for what happens in the kernel in terms of original A1 A2 and B
+                  !do gg=1,jnrmax
+                  !do hh=1,imrmax
+                  !C(hh+(i-1)*M+h-1,gg+g-1) =C(hh+(i-1)*M+h-1,gg+g-1)+  A1(i,j)* A2(hh+h-1,l) *B(l+(j-1)*M,gg+g-1)
+                  !enddo
+                  !enddo
+                  !enddo
+               end do
+            end do
+            !$omp end parallel do
+            !end do M loop in original version, i.e. without kernel and ablock and bblock
+         end do
+      end do
+
+   end subroutine dtrkmm
+
+   subroutine mm_kernel_8x6(Cout, pmax, ablock, bblock, imrmax, jnrmax, alpha)
+      ! compute kernel that targets avx2 ymm registers
+      ! imrmax/jmrmax, max copyout indices for edge cases
+      ! alpha to ultiply with a constant factor
+      integer, intent(in) :: pmax, imrmax, jnrmax
+      real*8, intent(in) :: alpha
+      real*8, contiguous, dimension(:, :) :: ablock
+      real*8, contiguous, dimension(:, :) :: bblock
+      real*8, intent(inout), dimension(:, :) ::  Cout
+      real*8, dimension(mr, nr) :: C ! 12 registers ymm
+      integer ::jjr, iir, pr
+
+      ! initialize
+      C = 0.0
+
+      ! unroll all mr nr loops
+      do pr = 1, pmax
+         C(:, 1) = C(:, 1) + bblock(1, pr)*ablock(:, pr)
+         C(:, 2) = C(:, 2) + bblock(2, pr)*ablock(:, pr)
+         C(:, 3) = C(:, 3) + bblock(3, pr)*ablock(:, pr)
+         C(:, 4) = C(:, 4) + bblock(4, pr)*ablock(:, pr)
+         C(:, 5) = C(:, 5) + bblock(5, pr)*ablock(:, pr)
+         C(:,  6) = C(:, 6) + bblock( 6, pr)*ablock(:, pr)
+         !! on avx512 we might want to use the zmm registers (512 bits/ 32 registers)
+         ! C(:,  7) = C(:, 7) + bblock( 7, pr)*ablock(:, pr)
+         ! C(:,  8) = C(:, 8) + bblock( 8, pr)*ablock(:, pr)
+         ! C(:,  9) = C(:, 9) + bblock( 9, pr)*ablock(:, pr)
+         ! C(:,  9) = C(:, 9) + bblock( 9, pr)*ablock(:, pr)
+         ! C(:, 10) = C(:,10) + bblock(10, pr)*ablock(:, pr)
+         ! C(:, 11) = C(:,11) + bblock(11, pr)*ablock(:, pr)
+         ! C(:, 12) = C(:,12) + bblock(12, pr)*ablock(:, pr)
+      end do
+
+      ! multiply 
+      C = alpha*C
+      ! copyout only those result required
+      ! in the future consider smaller kernels to handle edge cases
+      do jjr = 1, jnrmax
+      do iir = 1, imrmax
+         Cout(iir, jjr) = Cout(iir, jjr) + C(iir, jjr)
+      end do
+      end do
+
+   end subroutine mm_kernel_8x6
 end module enkf_core

@@ -6,7 +6,7 @@ project('pyenkf', 'c',
  )
 
 add_languages('fortran')
-add_project_arguments(['-O3','-fdefault-real-8','-march=native'],language : 'fortran')
+add_project_arguments(['-fopenmp','-O2','-fdefault-real-8','-march=znver3'],language : 'fortran')
 blas_dep=dependency('blas','openblas')
 
 py_mod = import('python')
