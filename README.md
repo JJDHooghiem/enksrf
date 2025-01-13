@@ -90,7 +90,7 @@ print(some_zeros_int.flags)
 
 #### dtrkmm 
 
-An implementation of a fused kronecker matrix matrix multiplication. It is used to compute an ensemble representing a covarince matrix $P$ that is decomposed into two matrices with kronecker factors so that $A_1 \otimes \A_2 = P$. Both these have a cholesky decomposition, which enter the subroutine. The algorithm avoids have to compute the full P and its cholesky decomposition, and has some weak optimization (cache blocking) targeting avx2 instructions (tested on AMD EPYC and AMD Ryzen 7). Performance on other machines is not guaranteed.
+An implementation of a fused kronecker matrix matrix multiplication. It is used to compute an ensemble representing a covarince matrix $P$ that is decomposed into two matrices with kronecker factors so that $A_1 \otimes A_2 = P$. Both these have a cholesky decomposition, which enter the subroutine. The algorithm avoids have to compute the full P and its cholesky decomposition, and has some weak optimization (cache blocking) targeting avx2 instructions (tested on AMD EPYC genoa (zen4) and AMD Ryzen 7 (zen3)). Performance on other machines is not guaranteed, and make sure to avoid avx512; it is not implemented and so far reduces performance.
 
 ```python
 pyenkf.enkf_core.dtrkmm(A1, A2, B, C)
@@ -113,4 +113,4 @@ pyenkf.enkf_core.dtrkmm(A1, A2, B, C)
 	'''
 ```
 
-See [this exmple](examples/kronmatmul.py)
+See [this example](examples/kronmatmul.py) for its use with python. 
